@@ -196,8 +196,9 @@ parse_opts() {
             --videos|-v) VIDEOS=true ;;
             --photos|-p) PHOTOS=true ;;
             --all|-a) CAMERA=true;VIDEOS=true;PHOTOS=true ;;
-            --push) PULL=false; PUSH=true ;;
-            --pull) PULL=true ;;
+            --push) PUSH=true; PULL=false ;;
+            --pull) PULL=true; PUSH=false ;;
+            --sync) PULL=true; PUSH=true ;;
             *)
                 if [[ $1 == -* ]]; then
                     printf "%s unknow option \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $1
@@ -237,15 +238,15 @@ main() {
     fi
 
     if $PULL; then
-        if $CAMERA; then pull_files /sdcard/DCIM/Camera camera; fi
-        if $VIDEOS; then pull_files /sdcard/Pictures/videos videos; fi
-        if $PHOTOS; then pull_files /sdcard/Pictures/photos photos; fi
+        if $CAMERA; then pull_files /sdcard/DCIM/Camera /hdd/media/camera; fi
+        if $VIDEOS; then pull_files /sdcard/Pictures/videos /hdd/media/videos; fi
+        if $PHOTOS; then pull_files /sdcard/Pictures/photos /hdd/media/photos; fi
     fi
 
     if $PUSH; then
-        if $CAMERA; then push_files camera /sdcard/DCIM/Camera; fi
-        if $VIDEOS; then push_files videos /sdcard/Pictures/videos; fi
-        if $PHOTOS; then push_files photos /sdcard/Pictures/photos; fi
+        if $CAMERA; then push_files /hdd/media/camera /sdcard/DCIM/Camera; fi
+        if $VIDEOS; then push_files /hdd/media/videos /sdcard/Pictures/videos; fi
+        if $PHOTOS; then push_files /hdd/media/photos /sdcard/Pictures/photos; fi
     fi
 }
 
