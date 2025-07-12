@@ -2,14 +2,20 @@
 # Globals
 #######################################
 ARGS=()
+PREFIX='sync:'
 DEVICE="-d"
-SIMULATE=false
-CAMERA=false
-VIDEOS=false
-PHOTOS=false
 PULL=true
 PUSH=false
-PREFIX='sync:'
+CONFIG_PATH="$HOME/.config/scripts/sync.conf"
+SIMULATE=false
+
+CAMERA=false
+CAMERA_PATH=()
+VIDEOS=false
+VIDEOS_PATH=()
+PHOTOS=false
+PHOTOS_PATH=()
+
 
 #######################################
 # Format the string to info colors
@@ -199,6 +205,7 @@ parse_opts() {
             --push) PUSH=true; PULL=false ;;
             --pull) PULL=true; PUSH=false ;;
             --sync) PULL=true; PUSH=true ;;
+            --config) CONFIG_PATH="$2"; shift 1 ;;
             *)
                 if [[ $1 == -* ]]; then
                     printf "%s unknow option \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $1
@@ -215,6 +222,51 @@ parse_opts() {
 }
 
 #######################################
+# Parse the config file
+#
+# Globals:
+#   CONFIG_PATH
+#   PREFIX
+# Outputs:
+#   Writes an array of paths separeted by
+#   an '=' sign, where the first element
+#   is the LOCAL path and the second is 
+#   the REMOTE paht
+#######################################
+parse_config() {
+    PREFIX='parse_config:'
+
+    if ! [ -r $CONFIG_PATH ]; then
+        printf "%s cannot access \x1b[1;96m'%s'\x1b[0m: no such file\n" $(perror $PREFIX) $CONFIG_PATH
+        exit 1
+    fi
+
+    while IFS='\n' read -r line;
+    do
+        if [[ $line == '#'* ]]; then continue; fi
+        shopt -s extglob       
+        case $line in
+            camera:*)
+                IFS='=' read -a line_split <<< "$line"
+                CAMERA_PATH[0]=${line_split[0]##camera:}
+                CAMERA_PATH[1]=${line_split[1]}
+                ;;
+            videos:*) 
+                IFS='=' read -a line_split <<< "$line"
+                VIDEOS_PATH[0]=${line_split[0]##videos:}
+                VIDEOS_PATH[1]=${line_split[1]}
+                ;;
+            photos:*)
+                IFS='=' read -a line_split <<< "$line"
+                PHOTOS_PATH[0]=${line_split[0]##photos:}
+                PHOTOS_PATH[1]=${line_split[1]}
+                ;; 
+        esac
+        shopt -u extglob       
+    done < "$CONFIG_PATH"
+}
+
+#######################################
 # The start point of the script
 #
 # Arguments:
@@ -227,7 +279,7 @@ main() {
     fi
 
     parse_opts $@
-    declare -p PULL PUSH
+    parse_config
 
     if [ ! "$(adb $DEVICE get-state 2>/dev/null)" ]; then
         printf "%s no devices found\n" $(perror $PREFIX)
@@ -240,15 +292,15 @@ main() {
     fi
 
     if $PULL; then
-        if $CAMERA; then pull_files /sdcard/DCIM/Camera /hdd/media/camera; fi
-        if $VIDEOS; then pull_files /sdcard/Pictures/videos /hdd/media/videos; fi
-        if $PHOTOS; then pull_files /sdcard/Pictures/photos /hdd/media/photos; fi
+        if $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
+        if $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
+        if $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
     fi
 
     if $PUSH; then
-        if $CAMERA; then push_files /hdd/media/camera /sdcard/DCIM/Camera; fi
-        if $VIDEOS; then push_files /hdd/media/videos /sdcard/Pictures/videos; fi
-        if $PHOTOS; then push_files /hdd/media/photos /sdcard/Pictures/photos; fi
+        if $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
+        if $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
+        if $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
     fi
 }
 
