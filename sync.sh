@@ -205,6 +205,8 @@ parse_opts() {
                     exit 1
                 fi
 
+                # Stores the rest of args that are not options
+                # TODO: put in use 
                 ARGS+=("$1")
                 ;;
         esac
