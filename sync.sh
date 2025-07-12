@@ -115,7 +115,7 @@ pull_files() {
     printf "%s file(s) to pull from \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $1
     printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
 
-    [[ $SIMULATE == false ]] && $(adb $DEVICE pull ${files[*]} "$2/" 2>>pull.log)
+    [[ $SIMULATE == false ]] && $(adb $DEVICE pull ${files[*]} "$2/" 2>>"$2/../pull.log")
 
     if ! $SIMULATE  && [ $? -eq 0 ]; then
         printf "%s success pulling file(s) from \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1
@@ -161,7 +161,7 @@ push_files() {
     printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
 
     if ! $SIMULATE; then
-        $(adb $DEVICE push ${files[*]} "$2" 2>>push.log)
+        $(adb $DEVICE push ${files[*]} "$2" 2>>"$1/../push.log")
     fi
 
     if ! $SIMULATE && [ $? -eq 0 ]; then
