@@ -295,7 +295,6 @@ main() {
     fi
 
     if $PULL; then
-        declare -p CAMERA_PATH
         if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
         if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
         if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
