@@ -101,7 +101,7 @@ get_diff() {
 #   $2: Path; to LOCAL files 
 #######################################
 pull_files() {
-    PREFIX='pull:'
+    local PREFIX='pull:'
     files=()
     media_files="$(get_diff $1 $2)"
 
@@ -143,7 +143,7 @@ pull_files() {
 #   $2: Path; to REMOTE files 
 #######################################
 push_files() {
-    PREFIX='push:'
+    local PREFIX='push:'
     files=()
     media_files="$(get_diff $2 $1 true)"
 
@@ -192,7 +192,7 @@ push_files() {
 #   Writes to global variables
 #######################################
 parse_opts() {
-    PREFIX='parse_opts:'
+    local PREFIX='parse_opts:'
     while [[ $# -gt 0 ]]; do
         case "$1" in 
             --usb|-u) DEVICE='-d' ;;
@@ -236,8 +236,7 @@ parse_opts() {
 #   the REMOTE paht
 #######################################
 parse_config() {
-    PREFIX='parse_config:'
-
+    local PREFIX='parse_config:'
     if ! [ -r $CONFIG_PATH ]; then
         printf "%s cannot access \x1b[1;96m'%s'\x1b[0m: no such file\n" $(perror $PREFIX) $CONFIG_PATH
         exit 1
