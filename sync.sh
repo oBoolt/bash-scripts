@@ -285,12 +285,12 @@ main() {
     fi
 
     if [ -z "$CAMERA_PATH" ] && [ -z "$VIDEOS_PATH" ] && [ -z "$PHOTOS_PATH" ]; then
-        printf "%s no path found in config, use the '--config <path_to_config>' option or create the file '$HOME/.config/scripts/sync.conf'\n" $(perror 'sync:')
+        printf "%s no path found in config, use the '--config <path_to_config>' option or create the file '$HOME/.config/scripts/sync.conf'\n" $(perror $PREFIX)
         exit 1
     fi
 
     if ! $CAMERA && ! $VIDEOS  && ! $PHOTOS; then
-        printf "%s no directory provided, use '--cam' | '--videos' | '--photos' | '--all' (you can combine)\n" $(perror 'sync:')
+        printf "%s no directory provided, use '--cam' | '--videos' | '--photos' | '--all' (you can combine)\n" $(perror $PREFIX)
         exit 1
     fi
 
