@@ -15,6 +15,9 @@ VIDEOS=false
 VIDEOS_PATH=
 PHOTOS=false
 PHOTOS_PATH=
+CUSTOM=false
+# Use declare with '-A' option to create an associative array
+declare -A CUSTOM_PATHS
 
 
 #######################################
@@ -199,7 +202,8 @@ parse_opts() {
             --camera|--cam|-c) CAMERA=true ;;
             --videos|-v) VIDEOS=true ;;
             --photos|-p) PHOTOS=true ;;
-            --all|-a) CAMERA=true;VIDEOS=true;PHOTOS=true ;;
+            --custom) CUSTOM=true ;;
+            --all|-a) CAMERA=true;VIDEOS=true;PHOTOS=true; CUSTOM=true ;;
             --push) PUSH=true; PULL=false ;;
             --pull) PULL=true; PUSH=false ;;
             --sync) PULL=true; PUSH=true ;;
@@ -259,6 +263,10 @@ parse_config() {
                 PHOTOS_PATH[0]=${line_split[0]##photos:}
                 PHOTOS_PATH[1]=${line_split[1]}
                 ;; 
+            custom:*)
+                IFS='=' read -a line_split <<< "$line"
+                CUSTOM_PATHS+=(["${line_split[0]##custom:}"]="${line_split[1]}")
+                ;;
         esac
         shopt -u extglob       
     done < "$CONFIG_PATH"
@@ -289,8 +297,8 @@ main() {
         exit 1
     fi
 
-    if ! $CAMERA && ! $VIDEOS  && ! $PHOTOS; then
-        printf "%s no directory provided, use '--cam' | '--videos' | '--photos' | '--all' (you can combine)\n" $(perror $PREFIX)
+    if ! $CAMERA && ! $VIDEOS  && ! $PHOTOS && ! $CUSTOM; then
+        printf "%s no directory provided, use '--cam' | '--videos' | '--photos' | '--custom' | '--all' (you can combine)\n" $(perror $PREFIX)
         exit 1
     fi
 
@@ -298,12 +306,26 @@ main() {
         if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
         if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
         if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
+        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
+            for local_path in ${!CUSTOM_PATHS[@]}
+            do
+                remote_path="${CUSTOM_PATHS[${local_path}]}"
+                pull_files $remote_path $local_path
+            done
+        fi
     fi
 
     if $PUSH; then
         if [ -n "$CAMERA_PATH" ] && $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
         if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
         if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
+        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
+            for local_path in ${!CUSTOM_PATHS[@]}
+            do
+                remote_path="${CUSTOM_PATHS[${local_path}]}"
+                push_files $local_path $remote_path
+            done
+        fi
     fi
 }
 
