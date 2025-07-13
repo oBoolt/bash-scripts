@@ -189,6 +189,7 @@ push_files() {
 #   Writes to global variables
 #######################################
 parse_opts() {
+    PREFIX='parse_opts:'
     while [[ $# -gt 0 ]]; do
         case "$1" in 
             --usb|-u) DEVICE='-d' ;;
