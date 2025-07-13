@@ -140,9 +140,6 @@ pull_files() {
 #   $2: Path; to REMOTE files 
 #######################################
 push_files() {
-    # adb -e push camera/FILE /sdcard/DCIM/Camera/FILE
-    # push_files photos /sdcard/Pictures/photos
-    # push [--sync] [-z ALGORITHM] [-Z] LOCAL... REMOTE
     PREFIX='push:'
     files=()
     media_files="$(get_diff $2 $1 true)"
