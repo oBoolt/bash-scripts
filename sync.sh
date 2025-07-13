@@ -121,7 +121,7 @@ pull_files() {
     [[ $SIMULATE == false ]] && $(adb $DEVICE pull ${files[*]} "$2/" 2>>"$2/../pull.log")
 
     if ! $SIMULATE  && [ $? -eq 0 ]; then
-        printf "%s success pulling file(s) from \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1
+        printf "%s success pulling file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
         return 0
     fi
 
@@ -165,7 +165,7 @@ push_files() {
     fi
 
     if ! $SIMULATE && [ $? -eq 0 ]; then
-        printf "%s success pushing file(s) to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $2
+        printf "%s success pushing file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
         return 0
     fi
 
