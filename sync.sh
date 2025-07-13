@@ -10,11 +10,11 @@ CONFIG_PATH="$HOME/.config/scripts/sync.conf"
 SIMULATE=false
 
 CAMERA=false
-CAMERA_PATH=()
+CAMERA_PATH=
 VIDEOS=false
-VIDEOS_PATH=()
+VIDEOS_PATH=
 PHOTOS=false
-PHOTOS_PATH=()
+PHOTOS_PATH=
 
 
 #######################################
@@ -284,21 +284,27 @@ main() {
         exit 1
     fi
 
+    if [ -z "$CAMERA_PATH" ] && [ -z "$VIDEOS_PATH" ] && [ -z "$PHOTOS_PATH" ]; then
+        printf "%s no path found in config, use the '--config <path_to_config>' option or create the file '$HOME/.config/scripts/sync.conf'\n" $(perror 'sync:')
+        exit 1
+    fi
+
     if ! $CAMERA && ! $VIDEOS  && ! $PHOTOS; then
         printf "%s no directory provided, use '--cam' | '--videos' | '--photos' | '--all' (you can combine)\n" $(perror 'sync:')
         exit 1
     fi
 
     if $PULL; then
-        if $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
-        if $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
-        if $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
+        declare -p CAMERA_PATH
+        if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
+        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
+        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
     fi
 
     if $PUSH; then
-        if $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
-        if $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
-        if $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
+        if [ -n "$CAMERA_PATH" ] && $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
+        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
+        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
     fi
 }
 
