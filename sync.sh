@@ -215,10 +215,6 @@ parse_opts() {
                     printf "%s unknow option \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $1
                     exit 1
                 fi
-
-                # Stores the rest of args that are not options
-                # TODO: put in use 
-                ARGS+=("$1")
                 ;;
         esac
         shift 1
