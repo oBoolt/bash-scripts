@@ -4,8 +4,8 @@
 #######################################
 PREFIX='sync:'
 DEVICE='-d'
-PULL=true
-PUSH=false
+REMOTE=true
+LOCAL=false
 CONFIG_PATH="$HOME/.config/scripts/sync.conf"
 SIMULATE=false
 
@@ -206,20 +206,32 @@ parse_opts() {
             --photos|-p) PHOTOS=true ;;
             --custom) CUSTOM=true ;;
             --all|-a) CAMERA=true;VIDEOS=true;PHOTOS=true; CUSTOM=true ;;
-            --push) PUSH=true; PULL=false ;;
-            --pull) PULL=true; PUSH=false ;;
-            --sync) PULL=true; PUSH=true ;;
+            --local) LOCAL=true; REMOTE=false ;;
+            --remote) REMOTE=true; LOCAL=false ;;
+            --sync) REMOTE=true; LOCAL=true ;;
             --config) CONFIG_PATH="$2"; shift 1 ;;
-            *)
-                if [[ $1 == -* ]]; then
-                    printf "%s unknow option \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $1
-                    exit 1
-                fi
-                ;;
-        esac
-        shift 1
-    done
-}
+            --action)
+                case ${2,,} in
+                    copy) ACTION=1 ;;
+                    delete) ACTION=2 ;;
+                    *)
+                        printf "%s unknow action \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $2
+                        exit 1
+                        ;;
+
+                    esac
+                    shift 1
+                    ;;
+                *)
+                    if [[ $1 == -* ]]; then
+                        printf "%s unknow option \x1b[1;96m'%s'\x1b[0m\n" $(perror $PREFIX) $1
+                        exit 1
+                    fi
+                    ;;
+            esac
+            shift 1
+        done
+    }
 
 #######################################
 # Parse the config file
@@ -299,7 +311,7 @@ main() {
         exit 1
     fi
 
-    if $PULL; then
+    if $REMOTE; then
         if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
         if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
         if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
@@ -312,7 +324,7 @@ main() {
         fi
     fi
 
-    if $PUSH; then
+    if $LOCAL; then
         if [ -n "$CAMERA_PATH" ] && $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
         if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
         if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
