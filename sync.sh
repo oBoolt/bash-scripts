@@ -1,9 +1,9 @@
+# sync.sh <--usb | --wifi | --serial <SERIAL_NUMBER>> <--copy | --delete | --action [copy | delete]> <--local | --remote | --sync (only for copy action)> [--config <PATH>] 
 #######################################
 # Globals
 #######################################
-ARGS=()
 PREFIX='sync:'
-DEVICE="-d"
+DEVICE='-d'
 PULL=true
 PUSH=false
 CONFIG_PATH="$HOME/.config/scripts/sync.conf"
@@ -18,6 +18,8 @@ PHOTOS_PATH=
 CUSTOM=false
 # Use declare with '-A' option to create an associative array
 declare -A CUSTOM_PATHS
+
+ACTION='copy' # <copy | delete>
 
 
 #######################################
