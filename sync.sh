@@ -19,7 +19,7 @@ CUSTOM=false
 # Use declare with '-A' option to create an associative array
 declare -A CUSTOM_PATHS
 
-ACTION='copy' # <copy | delete>
+ACTION=1 # 1=copy 2=delete
 
 
 #######################################
@@ -282,6 +282,49 @@ parse_config() {
 }
 
 #######################################
+# Handles when ACTION=1
+#
+# Globals:
+#   REMOTE
+#   LOCAL
+#   CAMERA
+#   VIDEOS
+#   PHOTOS
+#   CUSTOM
+#   CAMERA_PATH
+#   VIDEOS_PATH
+#   PHOTOS_PATH
+#   CUSTOM_PATHS
+#######################################
+handle_copy() {
+    if $REMOTE; then
+        if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
+        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
+        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
+        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
+            for local_path in ${!CUSTOM_PATHS[@]}
+            do
+                remote_path="${CUSTOM_PATHS[${local_path}]}"
+                pull_files $remote_path $local_path
+            done
+        fi
+    fi
+
+    if $LOCAL; then
+        if [ -n "$CAMERA_PATH" ] && $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
+        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
+        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
+        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
+            for local_path in ${!CUSTOM_PATHS[@]}
+            do
+                remote_path="${CUSTOM_PATHS[${local_path}]}"
+                push_files $local_path $remote_path
+            done
+        fi
+    fi
+}
+
+#######################################
 # The start point of the script
 #
 # Arguments:
@@ -311,31 +354,14 @@ main() {
         exit 1
     fi
 
-    if $REMOTE; then
-        if [ -n "$CAMERA_PATH" ] && $CAMERA; then pull_files ${CAMERA_PATH[1]} ${CAMERA_PATH[0]}; fi
-        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then pull_files ${VIDEOS_PATH[1]} ${VIDEOS_PATH[0]}; fi
-        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then pull_files ${PHOTOS_PATH[1]} ${PHOTOS_PATH[0]}; fi
-        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
-            for local_path in ${!CUSTOM_PATHS[@]}
-            do
-                remote_path="${CUSTOM_PATHS[${local_path}]}"
-                pull_files $remote_path $local_path
-            done
-        fi
-    fi
+    case $ACTION in 
+        1) handle_copy ;;
+        *) 
+            printf "%s action cannot be handled\n" $(perror $PREFIX)
+            exit 1
+            ;;
+    esac
 
-    if $LOCAL; then
-        if [ -n "$CAMERA_PATH" ] && $CAMERA; then push_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
-        if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then push_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
-        if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then push_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
-        if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
-            for local_path in ${!CUSTOM_PATHS[@]}
-            do
-                remote_path="${CUSTOM_PATHS[${local_path}]}"
-                push_files $local_path $remote_path
-            done
-        fi
-    fi
 }
 
 main $@
