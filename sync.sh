@@ -186,8 +186,10 @@ push_files() {
 #   VIDEOS
 #   PHOTOS
 #   CAMERA
-#   PULL
-#   PUSH
+#   LOCAL
+#   REMOTE
+#   CONFIG_PATH
+#   ACTION
 # Arguments:
 #   $@: All the arguments
 # Outputs:
@@ -237,8 +239,12 @@ parse_opts() {
 # Parse the config file
 #
 # Globals:
-#   CONFIG_PATH
 #   PREFIX
+#   CONFIG_PATH
+#   CAMERA_PATH
+#   VIDEOS_PATH 
+#   PHOTOS_PATH
+#   CUSTOM_PATHS
 # Outputs:
 #   Writes an array of paths separeted by
 #   an '=' sign, where the first element
