@@ -6,7 +6,7 @@ PREFIX='sync:'
 DEVICE='-d'
 REMOTE=true
 LOCAL=false
-CONFIG_PATH="$HOME/.config/scripts/sync.conf"
+CONFIG_PATH="${XDG_CONFIG_HOME:-${HOME}/.config}/scripts/sync.conf"
 SIMULATE=false
 
 CAMERA=false
