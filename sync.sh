@@ -71,118 +71,6 @@ pwarn() {
 }
 
 #######################################
-# Get the difference between the REMOTE
-# files and the LOCAL files
-#
-# Arguments:
-#   $1: Path; to REMOTE files
-#   $2: Path; to LOCAL files
-#   $3: Bool; TRUE=local files, FALSE=remote files 
-# Outputs:
-#   Writes diff to stdout
-########################################
-get_diff() {
-    result=
-    if [[ $3 == true ]]; then
-        result="$(diff <(adb $DEVICE shell ls $1) <(ls $2) | grep '^>' | sed -e 's/> //')"
-    else
-        result="$(diff <(adb $DEVICE shell ls $1) <(ls $2) | grep '^<' | sed -e 's/< //')"
-    fi
-    printf "$result"
-}
-
-#######################################
-# Get files from device 
-#
-# Globals:
-#   DEVICE
-#   SIMULATE
-#   PREFIX
-# Arguments:
-#   $1: Path; to REMOTE files
-#   $2: Path; to LOCAL files 
-#######################################
-pull_files() {
-    local PREFIX='pull:'
-    files=()
-    media_files="$(get_diff $1 $2)"
-
-    if [[ -z $media_files ]]; then
-        printf "%s no file(s) to pull from \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $1
-        return 0
-    fi
-
-    IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
-    for media in "${unformated_files[@]}"
-    do
-        files+=("$1/$media") 
-    done
-    printf "%s file(s) to pull from \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $1
-    printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
-
-    [[ $SIMULATE == false ]] && $(adb $DEVICE pull ${files[*]} "$2/" 2>>"$2/../pull.log")
-
-    if ! $SIMULATE  && [ $? -eq 0 ]; then
-        printf "%s success pulling file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
-        return 0
-    fi
-
-    if [ $? -eq 1 ]; then
-        printf "%s failed to pull file(s) from \x1b[1;36m'%s'\x1b[0m\n%s see 'pull.log' file for details\n" $(perror $PREFIX) $1 $(perror $PREFIX)
-        return 1
-    fi
-}
-
-#######################################
-# Copy files to device 
-#
-# Globals:
-#   DEVICE
-#   SIMULATE
-#   PREFIX
-# Arguments:
-#   $1: Path; to LOCAL files
-#   $2: Path; to REMOTE files 
-#######################################
-push_files() {
-    local PREFIX='push:'
-    files=()
-    media_files="$(get_diff $2 $1 true)"
-
-    if [[ -z $media_files ]]; then
-        printf "%s no file(s) to push to \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $2
-        return 0
-    fi
-
-    IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
-    for media in "${unformated_files[@]}"
-    do
-        files+=("$1/$media") 
-    done
-    printf "%s file(s) to push to \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $2
-    printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
-
-    if ! $SIMULATE; then
-        $(adb $DEVICE push ${files[*]} "$2" 2>>"$1/../push.log")
-    fi
-
-    if ! $SIMULATE && [ $? -eq 0 ]; then
-        printf "%s success pushing file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
-        return 0
-    fi
-
-    if [ $? -eq 1 ]; then
-        printf "%s failed to push file(s) to \x1b[1;36m'%s'\x1b[0m\n%s see 'push.log' file for details\n" $(perror $PREFIX) $2 $(perror $PREFIX)
-        return 1
-    fi
-}
-
-#######################################
-# Remove files from a directory
-#######################################
-remove_files() {}
-
-#######################################
 # Parse the options for global variables
 #
 # Globals:
@@ -293,6 +181,115 @@ parse_config() {
 }
 
 #######################################
+# Get the difference between the REMOTE
+# files and the LOCAL files
+#
+# Arguments:
+#   $1: Path; to REMOTE files
+#   $2: Path; to LOCAL files
+#   $3: Bool; TRUE=local files, FALSE=remote files 
+# Outputs:
+#   Writes diff to stdout
+########################################
+get_diff() {
+    result=
+    if [[ $3 == true ]]; then
+        result="$(diff <(adb $DEVICE shell ls $1) <(ls $2) | grep '^>' | sed -e 's/> //')"
+    else
+        result="$(diff <(adb $DEVICE shell ls $1) <(ls $2) | grep '^<' | sed -e 's/< //')"
+    fi
+    printf "$result"
+}
+
+#######################################
+# Get files from device 
+#
+# Globals:
+#   DEVICE
+#   SIMULATE
+#   PREFIX
+# Arguments:
+#   $1: Path; to REMOTE files
+#   $2: Path; to LOCAL files 
+#######################################
+pull_files() {
+    local PREFIX='pull:'
+    files=()
+    media_files="$(get_diff $1 $2)"
+
+    if [[ -z $media_files ]]; then
+        printf "%s no file(s) to pull from \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $1
+        return 0
+    fi
+
+    IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
+    for media in "${unformated_files[@]}"
+    do
+        files+=("$1/$media") 
+    done
+    printf "%s file(s) to pull from \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $1
+    printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
+
+    [[ $SIMULATE == false ]] && $(adb $DEVICE pull ${files[*]} "$2/" 2>>"$2/../pull.log")
+
+    if ! $SIMULATE  && [ $? -eq 0 ]; then
+        printf "%s success pulling file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
+        return 0
+    fi
+
+    if [ $? -eq 1 ]; then
+        printf "%s failed to pull file(s) from \x1b[1;36m'%s'\x1b[0m\n%s see 'pull.log' file for details\n" $(perror $PREFIX) $1 $(perror $PREFIX)
+        return 1
+    fi
+}
+
+#######################################
+# Copy files to device 
+#
+# Globals:
+#   DEVICE
+#   SIMULATE
+#   PREFIX
+# Arguments:
+#   $1: Path; to LOCAL files
+#   $2: Path; to REMOTE files 
+#######################################
+push_files() {
+    local PREFIX='push:'
+    files=()
+    media_files="$(get_diff $2 $1 true)"
+
+    if [[ -z $media_files ]]; then
+        printf "%s no file(s) to push to \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $2
+        return 0
+    fi
+
+    IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
+    for media in "${unformated_files[@]}"
+    do
+        files+=("$1/$media") 
+    done
+    printf "%s file(s) to push to \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $2
+    printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
+
+    if ! $SIMULATE; then
+        $(adb $DEVICE push ${files[*]} "$2" 2>>"$1/../push.log")
+    fi
+
+    if ! $SIMULATE && [ $? -eq 0 ]; then
+        printf "%s success pushing file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
+        return 0
+    fi
+
+    if [ $? -eq 1 ]; then
+        printf "%s failed to push file(s) to \x1b[1;36m'%s'\x1b[0m\n%s see 'push.log' file for details\n" $(perror $PREFIX) $2 $(perror $PREFIX)
+        return 1
+    fi
+}
+
+
+
+#######################################
 # Handles when ACTION=1
 #
 # Globals:
@@ -359,16 +356,10 @@ handle_delete() {
     # determine if files that will be excluded will be from
     # the remote or from local
     #
-    local PREFIX='delete:'
+    local PREFIX='remove_files:'
     files=()
     media_files="$(get_diff $2 $1 $LOCAL)"
     declare -p media_files
-
-    if [[ -z $media_files ]]; then
-        printf "%s no file(s) to delete from \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $2
-        return 0
-    fi
-
     # IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
     # for media in "${unformated_files[@]}"
     # do
@@ -431,7 +422,7 @@ main() {
 
     case $ACTION in 
         1) handle_copy ;;
-        2) handle_delete ${CAMERA_PATH[0]} ${CAMERA_PATH[1]} ;;
+        2) handle_delete ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]} ;;
         *) 
             printf "%s action cannot be handled\n" $(perror $PREFIX)
             exit 1
