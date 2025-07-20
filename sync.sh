@@ -178,6 +178,11 @@ push_files() {
 }
 
 #######################################
+# Remove files from a directory
+#######################################
+remove_files() {}
+
+#######################################
 # Parse the options for global variables
 #
 # Globals:
@@ -330,6 +335,70 @@ handle_copy() {
     fi
 }
 
+
+#######################################
+# Handles when ACTION=2
+#
+# Globals:
+#   REMOTE
+#   LOCAL
+#   CAMERA
+#   VIDEOS
+#   PHOTOS
+#   CUSTOM
+#   CAMERA_PATH
+#   VIDEOS_PATH
+#   PHOTOS_PATH
+#   CUSTOM_PATHS
+# Arguments:
+#   $1: Path; to LOCAL files
+#   $2: Path; to REMOTE files
+#######################################
+handle_delete() {
+    # Get diff
+    # determine if files that will be excluded will be from
+    # the remote or from local
+    #
+    local PREFIX='delete:'
+    files=()
+    media_files="$(get_diff $2 $1 $LOCAL)"
+    declare -p media_files
+
+    if [[ -z $media_files ]]; then
+        printf "%s no file(s) to delete from \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $2
+        return 0
+    fi
+
+    # IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
+    # for media in "${unformated_files[@]}"
+    # do
+    #     files+=("$1/$media") 
+    # done
+    # printf "%s file(s) to push to \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $2
+    # printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
+    #
+    # if ! $SIMULATE; then
+    #     $(adb $DEVICE push ${files[*]} "$2" 2>>"$1/../push.log")
+    # fi
+    #
+    # if ! $SIMULATE && [ $? -eq 0 ]; then
+    #     printf "%s success pushing file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
+    #     return 0
+    # fi
+    #
+    # if [ $? -eq 1 ]; then
+    #     printf "%s failed to push file(s) to \x1b[1;36m'%s'\x1b[0m\n%s see 'push.log' file for details\n" $(perror $PREFIX) $2 $(perror $PREFIX)
+    #     return 1
+    # fi
+
+    # if $REMOTE; then
+    # elif $LOCAL; then
+    # else
+    #     exit 1;
+    # fi
+            
+}
+
 #######################################
 # The start point of the script
 #
@@ -362,6 +431,7 @@ main() {
 
     case $ACTION in 
         1) handle_copy ;;
+        2) handle_delete ${CAMERA_PATH[0]} ${CAMERA_PATH[1]} ;;
         *) 
             printf "%s action cannot be handled\n" $(perror $PREFIX)
             exit 1
