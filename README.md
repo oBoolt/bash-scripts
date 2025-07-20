@@ -6,7 +6,7 @@ Put the files in a directory that is in `$PATH`
 - `sync`: an wrapper for [`adb`](https://developer.android.com/tools/adb) that syncs files with your android device and you current device
 ## :white_check_mark: To-Do
 - `sync`
-    - [] delete action
-    - [] log system
+    - [ ] delete action
+    - [ ] log system
 
 
