@@ -332,6 +332,50 @@ handle_copy() {
     fi
 }
 
+#######################################
+# Remote files from a path
+# Globals:
+#   PREFIX
+#   LOCAL
+#   DEVICE
+# Arguments:
+#   $1: Path; to LOCAL files
+#   $2: Path; to REMOTE files
+#######################################
+remove_files() {
+    local PREFIX='delete:'
+    files=()
+    media_files="$(get_diff $2 $1 $LOCAL)"
+    delete_path=$2
+    [ $LOCAL = true ] && delete_path=$1
+    
+    if [[ -z $media_files ]]; then
+        printf "%s no file(s) to delete from \x1b[1;36m'%s/'\x1b[0m\n" $(pwarn $PREFIX) $delete_path
+        return 0
+    fi
+
+    IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
+    for media in "${unformated_files[@]}"
+    do
+        files+=("$delete_path/$media") 
+    done
+    printf "%s file(s) to delete from \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $delete_path
+    printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
+
+    if ! $SIMULATE; then
+        read -p "Are you sure? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            [[ "$0" = "$BASH_SOURCE" ]] && exit 0 || return 0 
+        fi
+
+        if $LOCAL; then
+            rm ${files[*]} >>"$1/../delete.log"
+        fi
+        $(adb $DEVICE shell "rm ${files[*]}" 2>>"$1/../delete.log")
+    fi
+}
 
 #######################################
 # Handles when ACTION=2
@@ -352,42 +396,16 @@ handle_copy() {
 #   $2: Path; to REMOTE files
 #######################################
 handle_delete() {
-    # Get diff
-    # determine if files that will be excluded will be from
-    # the remote or from local
-    #
-    local PREFIX='remove_files:'
-    files=()
-    media_files="$(get_diff $2 $1 $LOCAL)"
-    declare -p media_files
-    # IFS=$'\n' read -d "" -ra unformated_files <<< "$media_files"
-    # for media in "${unformated_files[@]}"
-    # do
-    #     files+=("$1/$media") 
-    # done
-    # printf "%s file(s) to push to \x1b[1;36m'%s/'\x1b[0m:\n" $(pinfo $PREFIX) $2
-    # printf "\x1b[34m%s\x1b[0m\n" "${media_files[@]}"
-    #
-    # if ! $SIMULATE; then
-    #     $(adb $DEVICE push ${files[*]} "$2" 2>>"$1/../push.log")
-    # fi
-    #
-    # if ! $SIMULATE && [ $? -eq 0 ]; then
-    #     printf "%s success pushing file(s) from \x1b[1;36m'%s'\x1b[0m to \x1b[1;36m'%s'\x1b[0m\n" $(psuccess $PREFIX) $1 $2
-    #     return 0
-    # fi
-    #
-    # if [ $? -eq 1 ]; then
-    #     printf "%s failed to push file(s) to \x1b[1;36m'%s'\x1b[0m\n%s see 'push.log' file for details\n" $(perror $PREFIX) $2 $(perror $PREFIX)
-    #     return 1
-    # fi
-
-    # if $REMOTE; then
-    # elif $LOCAL; then
-    # else
-    #     exit 1;
-    # fi
-            
+    if [ -n "$CAMERA_PATH" ] && $CAMERA; then remove_files ${CAMERA_PATH[0]} ${CAMERA_PATH[1]}; fi
+    if [ -n "$VIDEOS_PATH" ] && $VIDEOS; then remove_files ${VIDEOS_PATH[0]} ${VIDEOS_PATH[1]}; fi
+    if [ -n "$PHOTOS_PATH" ] && $PHOTOS; then remove_files ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]}; fi
+    if [[ "${#CUSTOM_PATHS[@]}" != 0 ]] && $CUSTOM; then
+        for local_path in ${!CUSTOM_PATHS[@]}
+        do
+            remote_path="${CUSTOM_PATHS[${local_path}]}"
+            remove_files $local_path $remote_path
+        done
+    fi
 }
 
 #######################################
@@ -422,7 +440,7 @@ main() {
 
     case $ACTION in 
         1) handle_copy ;;
-        2) handle_delete ${PHOTOS_PATH[0]} ${PHOTOS_PATH[1]} ;;
+        2) handle_delete ;;
         *) 
             printf "%s action cannot be handled\n" $(perror $PREFIX)
             exit 1
